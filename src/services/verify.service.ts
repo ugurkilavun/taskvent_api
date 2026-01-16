@@ -25,10 +25,7 @@ const verifyService = async (token: string): Promise<authResponseType> => {
   if (!updateVerify_) throw new statusCodeErrors("Token error.", 400);
 
   return {
-    response: {
-      message: "Email verified.",
-    },
-    userId: verifyFin.id,
+    message: "Email verified.",
     HTTPStatusCode: 200
   };
 

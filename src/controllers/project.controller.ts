@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 // Services
 import { createProject, getProject, getProjects } from "../services/project.service";
-import { createTask } from "../services/task.service";
+// import { createTask } from "../services/task.service";
 // Utils
-import { resTryCatch } from '../utils/customErrorHandlers.util';
+import { ProjectExceptionHandler } from '../utils/customErrorHandlers.util';
+
+// Class
+const ProjectExceptionHandlerTemp = new ProjectExceptionHandler();
 
 export const createProjectController = async (req: Request, res: Response) => {
 
@@ -12,7 +15,7 @@ export const createProjectController = async (req: Request, res: Response) => {
     userID: string, teamID: Array<string>, title: string, description: string, tags: Array<string>,
   } = req.body;
 
-  await resTryCatch(
+  await ProjectExceptionHandlerTemp.Handle(
     { file: "projects", level: "RESPONSE", logType: "project", service: "project.service" },
     req,
     res,
@@ -26,7 +29,7 @@ export const getProjectController = async (req: Request, res: Response) => {
   const userID: string = req.params.userID;
   const projectID: string = req.params.projectID;
 
-  await resTryCatch(
+  await ProjectExceptionHandlerTemp.Handle(
     { file: "projects", level: "RESPONSE", logType: "project", service: "project.service" },
     req,
     res,
@@ -39,7 +42,7 @@ export const getProjectsController = async (req: Request, res: Response) => {
   // Datas
   const userID: string = req.params.userID;
 
-  await resTryCatch(
+  await ProjectExceptionHandlerTemp.Handle(
     { file: "projects", level: "RESPONSE", logType: "project", service: "project.service" },
     req,
     res,

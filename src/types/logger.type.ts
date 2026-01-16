@@ -1,4 +1,5 @@
-export type levelType = "INFO" | "DEBUG" | "WARN" | "ERROR" | "FATAL" | "REQUEST" | "RESPONSE" | "SECURITY" | "AUDIT" | "PERFORMANCE" | "SYSTEM"
+export type levelType = "INFO" | "DEBUG" | "WARN" | "ERROR" | "FATAL" | "REQUEST" | "RESPONSE" | "SECURITY" | "AUDIT" | "PERFORMANCE" | "SYSTEM";
+export type errorType = "STATCODEERROR" | "SYNTAXERROR" | "TYPEERROR" | "SERVERERROR" | "MAILERROR" | "VERIFYERROR" | "AUTHERROR" | "ANYERROR" | "TOKENERROR" | undefined;
 
 export type loggerType = {
   requestID?: string,
@@ -17,7 +18,7 @@ export type loggerType = {
   statusCode?: number,
   durationMs?: any | undefined,
   details?: {
-    error?: "STATCODEERROR" | "SYNTAXERROR" | "TYPEERROR" | "SERVERERROR" | "MAILERROR" | "VERIFYERROR" | "AUTHERROR" | "ANYERROR" | "TOKENERROR",
+    error?: errorType,
     stack?: string
   }
 };

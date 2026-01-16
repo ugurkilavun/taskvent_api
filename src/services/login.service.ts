@@ -33,12 +33,9 @@ const loginService = async (username?: string, password?: string): Promise<authR
   ); // 60d
 
   return {
-    response: {
-      message: "Login successful.",
-      access_token: ACCESS_TOKEN,
-      refresh_token: REFRESH_TOKEN
-    },
-    userId: userDATAS._id,
+    message: "Login successful.",
+    accessToken: ACCESS_TOKEN,
+    refreshToken: REFRESH_TOKEN,
     HTTPStatusCode: 200,
   };
 

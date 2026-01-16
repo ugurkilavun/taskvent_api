@@ -25,3 +25,15 @@ export const findProjectsByUserID = async (userID: string): Promise<any> => {
     owner: userID,
   });
 };
+
+export const findProjectsByTeamID = async (teamID: string): Promise<any> => {
+  return await project.find({
+    teamID: { $in: teamID }
+  });
+};
+
+export const findProjectsByTeamIDTest = async (teamIDs: Array<string>): Promise<any> => {
+  return await project.find({
+    teamID: { $in: teamIDs }
+  });
+};

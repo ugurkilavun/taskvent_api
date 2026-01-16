@@ -2,7 +2,7 @@ import express, { Router } from 'express';
 import dotenv from 'dotenv';
 // Controllers
 import { createProjectController, getProjectController, getProjectsController } from "../controllers/project.controller"; // Projects
-import { createTaskController, getTaskController } from "../controllers/task.controller"; // Tasks
+// import { createTaskController, getTaskController } from "../controllers/task.controller"; // Tasks
 // Middlewares
 import { authControl } from "../middlewares/auth.middleware";
 
@@ -25,8 +25,8 @@ router.get('/projects/:projectID', authControl, getProjectController); // Single
 // PATCH /projects/:projectId/teams/:teamId - Team güncelleme (kısmi)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // Tasks
-router.post('/projects/:projectid/task', authControl, createTaskController);
-router.get('/projects/:projectid/task/:taskid', authControl, getTaskController);
+// router.post('/projects/:projectid/task', authControl, createTaskController);
+// router.get('/projects/:projectid/task/:taskid', authControl, getTaskController);
 // Teams
 // router.post('/team', authControl, createTeamController);
 // router.get('/team/:teamid', authControl, getTeamController);

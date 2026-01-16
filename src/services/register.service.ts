@@ -79,12 +79,9 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
   );
 
   return {
-    response: {
-      message: "Registration Successful.",
-      access_token: ACCESS_TOKEN,
-      refresh_token: REFRESH_TOKEN
-    },
-    userId: userIn._id,
+    message: "Registration Successful.",
+    accessToken: ACCESS_TOKEN,
+    refreshToken: REFRESH_TOKEN,
     HTTPStatusCode: 201
   };
 };

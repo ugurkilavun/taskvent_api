@@ -4,14 +4,17 @@ import registerService from "../services/register.service";
 // Types
 import { authResponseType } from "../types/responses.type";
 // Utils
-import { resTryCatch } from '../utils/customErrorHandlers.util';
+import { AuthExceptionHandler } from '../utils/customErrorHandlers.util';
+
+// Class
+const AuthExceptionHandleTemp = new AuthExceptionHandler();
 
 const registerController = async (req: Request, res: Response) => {
 
   // Datas
   const { firstname, lastname, username, email, password, dateOfBirth, country } = req.body;
 
-  await resTryCatch(
+  await AuthExceptionHandleTemp.Handle(
     { file: "registers", level: "RESPONSE", logType: "register", service: "register.service" },
     req,
     res,

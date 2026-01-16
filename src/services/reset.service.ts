@@ -39,10 +39,7 @@ export const forgotPassword = async (email?: string): Promise<authResponseType> 
   });
 
   return {
-    response: {
-      message: "If an account with that email exists, we have sent password reset instructions.",
-    },
-    userId: DATA.id,
+    message: "If an account with that email exists, we have sent password reset instructions.",
     HTTPStatusCode: 200
   };
 };
@@ -75,11 +72,7 @@ export const resetPassword = async (token?: string, password?: string, rePasswor
   if (!tokenBeenUpdated) throw new statusCodeErrors("Update error.", 400);
 
   return {
-    response: {
-      message: "The password has been successfully updated.",
-    },
-    userId: TOKEN_.id,
+    message: "The password has been successfully updated.",
     HTTPStatusCode: 200
-
   };
 };

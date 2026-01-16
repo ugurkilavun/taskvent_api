@@ -2,15 +2,19 @@ import { Request, Response } from 'express';
 // Services
 import { forgotPassword, resetPassword } from "../services/reset.service";
 // Utils
-import { resTryCatch } from '../utils/customErrorHandlers.util';
+import { AuthExceptionHandler } from '../utils/customErrorHandlers.util';
 import { hashURLToken } from '../utils/urlTokens.util';
+
+// Class
+const AuthExceptionHandleTemp = new AuthExceptionHandler();
+
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
 
   // Datas
   const { email } = req.body;
 
-  await resTryCatch(
+  await AuthExceptionHandleTemp.Handle(
     { file: "resets", level: "RESPONSE", logType: "forgotpassword", service: "reset.service" },
     req,
     res,
@@ -26,10 +30,10 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 
   const { password, rePassword }: any = req.body;
 
-   await resTryCatch(
+  await AuthExceptionHandleTemp.Handle(
     { file: "resets", level: "RESPONSE", logType: "resetpassword", service: "reset.service" },
     req,
     res,
-    () =>resetPassword(hashedToken, password, rePassword)
+    () => resetPassword(hashedToken, password, rePassword)
   );
 };

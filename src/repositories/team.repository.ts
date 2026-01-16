@@ -15,10 +15,14 @@ export const insertTeam = async (DATA: teamType): Promise<any> => {
   });
 };
 
-export const findTeamByTeamID = async (teamID: string): Promise<any> => {
-  return await team.findOne({
-    _id: teamID
-  });
+// export const findTeamByTeamID = async (teamID: string): Promise<any> => {
+//   return await team.findOne({
+//     _id: teamID
+//   });
+// };
+
+export const findTeamByTeamID = async (teamIDs: Array<string>): Promise<any> => {
+  return await team.find({ _id: teamIDs });
 };
 
 export const findTeamByUserID = async (projectID: string, userID: string): Promise<any> => {
@@ -28,6 +32,6 @@ export const findTeamByUserID = async (projectID: string, userID: string): Promi
   });
 };
 
-export const findUserFromTeams = async (userID: string): Promise<any> => {
-  return await team.find({ $or: [{ members: { $in: userID } }, { teamLeaders: { $in: userID } }, { projectManagers: { $in: userID } }] });
+export const findTeamIDByUserID = async (userID: string): Promise<any> => {
+  return await team.find({ $or: [{ members: { $in: userID } }, { teamLeaders: { $in: userID } }, { projectManagers: { $in: userID } }] }, { _id: 1 });
 };
