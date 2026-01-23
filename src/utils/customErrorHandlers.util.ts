@@ -82,7 +82,7 @@ export class AuthExceptionHandler {
           : `/${(req.url).split("/")[1].toString()}`,
         method: req.method,
         userAgent: req.get('user-agent'),
-        statusCode: 500,
+        statusCode: res.statusCode,
         durationMs: performance.now() - initialPeriod,
         details: {
           error: errorType,
@@ -172,7 +172,7 @@ export class ProjectExceptionHandler {
           : `/${(req.url).split("/")[1].toString()}`,
         method: req.method,
         userAgent: req.get('user-agent'),
-        statusCode: 500,
+        statusCode: res.statusCode,
         durationMs: performance.now() - initialPeriod,
         details: {
           error: errorType,

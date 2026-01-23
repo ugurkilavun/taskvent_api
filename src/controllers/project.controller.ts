@@ -4,6 +4,7 @@ import { createProject, getProject, getProjects } from "../services/project.serv
 // import { createTask } from "../services/task.service";
 // Utils
 import { ProjectExceptionHandler } from '../utils/customErrorHandlers.util';
+import { StreamState } from 'node:http2';
 
 // Class
 const ProjectExceptionHandlerTemp = new ProjectExceptionHandler();
@@ -26,8 +27,8 @@ export const createProjectController = async (req: Request, res: Response) => {
 export const getProjectController = async (req: Request, res: Response) => {
 
   // Datas
-  const userID: string = req.params.userID;
-  const projectID: string = req.params.projectID;
+  const userID: any = req.params.userID; // Error: 'string | string[]'
+  const projectID: any = req.params.projectID; // Error: 'string | string[]'
 
   await ProjectExceptionHandlerTemp.Handle(
     { file: "projects", level: "RESPONSE", logType: "project", service: "project.service" },
@@ -40,7 +41,7 @@ export const getProjectController = async (req: Request, res: Response) => {
 export const getProjectsController = async (req: Request, res: Response) => {
 
   // Datas
-  const userID: string = req.params.userID;
+  const userID: any = req.params.userID; // Error: 'string | string[]'
 
   await ProjectExceptionHandlerTemp.Handle(
     { file: "projects", level: "RESPONSE", logType: "project", service: "project.service" },

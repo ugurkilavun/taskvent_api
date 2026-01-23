@@ -21,11 +21,7 @@ export const findByUsername = async (username: string): Promise<any> => {
   return await user.findOne({ username: username }, { _id: 1, firstname: 1, lastname: 1, username: 1 });
 };
 
-export const findById_flu = async (id: string): Promise<any> => {
-  return await user.findOne({ _id: id }, { _id: 0, firstname: 1, lastname: 1, username: 1 });
-};
-
-export const findById_flu2 = async (id: Array<string>): Promise<any> => {
+export const findById_flu = async (id: Array<string>): Promise<any> => {
   return await user.find({ _id: id }, { _id: 0, firstname: 1, lastname: 1, username: 1 });
 };
 

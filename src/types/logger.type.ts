@@ -16,7 +16,7 @@ export type loggerType = {
   method?: string,
   userAgent?: string,
   statusCode?: number,
-  durationMs?: any | undefined,
+  durationMs?: number,
   details?: {
     error?: errorType,
     stack?: string
