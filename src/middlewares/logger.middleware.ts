@@ -5,7 +5,7 @@ import chalk from "chalk";
 // Types
 import { loggerType } from "../types/logger.type";
 
-export class logger {
+export class Logger {
 
   // constructor() {
   //   this.message = message;

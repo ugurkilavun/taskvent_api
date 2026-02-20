@@ -2,24 +2,34 @@ import { Request, Response } from 'express';
 // Services
 import registerService from "../services/register.service";
 // Types
-import { authResponseType } from "../types/responses.type";
+import { responseType } from "../types/cusExceptionHandlers.type";
 // Utils
-import { AuthExceptionHandler } from '../utils/customErrorHandlers.util';
+import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+// Typesi
+import { UserType } from "../types/users.type";
 
 // Class
-const AuthExceptionHandleTemp = new AuthExceptionHandler();
+const exceptionHandlers = new ExceptionHandlers();
 
-const registerController = async (req: Request, res: Response) => {
+const registerControlRouter = async (req: Request, res: Response, registerType: UserType, responseType: responseType): Promise<void> => {
 
-  // Datas
-  const { firstname, lastname, username, email, password, dateOfBirth, country } = req.body;
-
-  await AuthExceptionHandleTemp.Handle(
+  await exceptionHandlers.authHandler(
     { file: "registers", level: "RESPONSE", logType: "register", service: "register.service" },
+    responseType,
     req,
     res,
-    () => registerService({ firstname, lastname, username, email, password, dateOfBirth, country })
+    () => registerService(registerType)
   );
 };
 
-export default registerController;
+export const registerWebController = async (req: Request, res: Response): Promise<void> => {
+  // Datas
+  const { firstname, lastname, username, email, password, dateOfBirth, country }: UserType = req.body;
+  registerControlRouter(req, res, { firstname, lastname, username, email, password, dateOfBirth, country }, "web");
+};
+
+export const registerMobileController = async (req: Request, res: Response): Promise<void> => {
+  // Datas
+  const { firstname, lastname, username, email, password, dateOfBirth, country }: UserType = req.body;
+  registerControlRouter(req, res, { firstname, lastname, username, email, password, dateOfBirth, country }, "mobile");
+};

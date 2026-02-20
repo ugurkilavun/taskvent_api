@@ -6,4 +6,5 @@ export type UserType = {
   password: string;
   dateOfBirth: Date;
   country: string;
+  verifiedAccount?: boolean;
 };

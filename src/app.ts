@@ -1,25 +1,27 @@
 import express, { Application, Request, Response } from 'express';
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from 'dotenv';
 // Configs
 import connectDB from "./configs/db.config";
 import { createFiles } from "./configs/createFiles.config";
 // Routes
-import login from "./routes/login.route";
-import register from "./routes/register.route";
+// import login from "./routes/login.route";
+// import register from "./routes/register.route";
+import auth from "./routes/auth.route";
 import verify from "./routes/verify.route";
 import reset from "./routes/reset.route";
-import refresh from "./routes/refresh.route";
+// import refresh from "./routes/refresh.route";
 import project from "./routes/project.route";
 // Middlewares
-import { logger } from "./middlewares/logger.middleware";
+import { Logger } from "./middlewares/logger.middleware";
 
 // .env config
 dotenv.config({ quiet: true });
 
 // Logger
-const logg2r = new logger();
+const logger = new Logger();
 
 // Creating directories and files
 createFiles();
@@ -30,20 +32,28 @@ connectDB();
 const app: Application = express();
 
 app.use(bodyParser.json()); // To accept JSON data
+app.use(cookieParser()); // Parse Cookie
+
 // CORS
-app.use(cors({ origin: "*" })); // Permitted URLs
+app.use(
+  cors(
+    {
+      origin: "*", // Permitted URLs
+      credentials: true // Access-Control-Allow-Credentials: true
+    }
+  ));
 
 // Router usage area
-app.use('/', login);
-app.use('/', register);
+app.use('/', auth);
+// app.use('/', register);
 app.use('/', verify);
 app.use('/', reset);
-app.use('/', refresh);
+// app.use('/', refresh);
 app.use('/', project);
 
 // https://expressjs.com/en/guide/error-handling.html
 app.use((error: Error, req: Request, res: Response, next: any) => {
-  logg2r.create({
+  logger.create({
     timestamp: new Date(),
     level: "RESPONSE",
     logType: "server",

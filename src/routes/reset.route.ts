@@ -10,6 +10,6 @@ const router: Router = express.Router();
 
 // Reset Route
 router.post('/forgotPassword', forgotPasswordController);
-router.post('/resetPassword', resetPasswordController);
+router.post('/resetPassword/:token', resetPasswordController);
 
 export default router;

@@ -1,10 +1,13 @@
 import express, { Router } from 'express';
 import dotenv from 'dotenv';
 // Controllers
-import { createProjectController, getProjectController, getProjectsController } from "../controllers/project.controller"; // Projects
+import { createProjectController, getProjectController, getProjectsController, patchProjectsController } from "../controllers/project.controller"; // Projects
 // import { createTaskController, getTaskController } from "../controllers/task.controller"; // Tasks
 // Middlewares
-import { authControl } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
+
+// Class
+const authMiddleware = new AuthMiddleware();
 
 // .env config
 dotenv.config({ quiet: true });
@@ -12,9 +15,11 @@ dotenv.config({ quiet: true });
 const router: Router = express.Router();
 
 // Projects
-router.post('/projects', authControl, createProjectController);
-router.get('/projects', authControl, getProjectsController); // Multi
-router.get('/projects/:projectID', authControl, getProjectController); // Single
+router.post('/projects', authMiddleware.checkToken, createProjectController);
+router.get('/projects', authMiddleware.checkToken, getProjectsController); // Multi
+router.get('/projects/:projectID', authMiddleware.checkToken, getProjectController); // Single
+router.patch('/projects/:projectID', authMiddleware.checkToken, patchProjectsController); // Single
+// * router.delete('/projects/:projectID', authControl, getProjectController); // Single
 // router.patch('/projects', authControl, projectController);
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // router.patch('/projects/:projectid', authControl, addTeamController);

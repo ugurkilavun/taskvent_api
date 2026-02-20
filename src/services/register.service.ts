@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 // Utils
 import { signToken } from "../utils/jwt.util";
 import { statusCodeErrors } from "../utils/customErrors.util";
-import { generateURLToken, hashURLToken } from "../utils/urlTokens.util";
+import { URLToken } from "../utils/urlTokens.util";
 // Repositories
-import { checkEmailOrUsername, insertUser } from "../repositories/user.repository";
-import { insertVerify } from "../repositories/verify.repository";
+import { UserRepository } from "../repositories/user.repository";
+import { VerifyRepository } from "../repositories/verify.repository";
 // Types
 import { UserType } from "../types/users.type";
 import { authResponseType } from "../types/responses.type";
@@ -16,26 +16,40 @@ import { sendVerificationEmail } from "./mail.service";
 // .env config
 dotenv.config({ quiet: true });
 
+// Class
+const userRepository = new UserRepository;
+const verifyRepository = new VerifyRepository;
+
+// Class
+const urlToken = new URLToken();
+
+// Email format validation
+const validEmail = (email: string): boolean => {
+  const pattern: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return pattern.test(email);
+};
+
 const registerService = async (DATA: UserType): Promise<authResponseType> => {
 
   if (Object.values(DATA).some(x => x === undefined)) throw new statusCodeErrors("Incomplete data.", 400);
-  console.log()
 
-  const username_: unknown = await checkEmailOrUsername(DATA.username);
+  if (!validEmail(DATA.email)) throw new statusCodeErrors("Invalid email format.", 400);
+
+  const username_: unknown = await userRepository.checkEmailOrUsername(DATA.username);
   if (username_) throw new statusCodeErrors("Username already exists.", 409);
 
-  const email_: unknown = await checkEmailOrUsername(DATA.email);
+  const email_: any = await userRepository.checkEmailOrUsername(DATA.email);
   if (email_) throw new statusCodeErrors("Email already exists.", 409);
 
   const salt = bcrypt.genSaltSync(10);
   const paswdHash = bcrypt.hashSync(DATA.password, salt);
 
   // * Generate URL Token
-  const urlToken: string = generateURLToken();
-  const hash_URLToken = hashURLToken(urlToken);
+  const urlTokenDATA: string = urlToken.generate();
+  const hash_URLToken = urlToken.hash(urlTokenDATA);
 
   // * Insert user
-  const userIn: any = await insertUser({
+  const userIn: any = await userRepository.insertUser({
     firstname: DATA.firstname,
     lastname: DATA.lastname,
     username: DATA.username,
@@ -43,11 +57,12 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
     password: paswdHash,
     dateOfBirth: DATA.dateOfBirth,
     country: DATA.country,
+    verifiedAccount: false
   });
   if (!userIn) throw new statusCodeErrors("Registration failed.", 400);
 
   // * Insert verify
-  const verifyIn: unknown = await insertVerify({
+  const verifyIn: unknown = await verifyRepository.insertVerify({
     id: userIn._id.toString(),
     token: hash_URLToken,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
@@ -59,21 +74,21 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
   sendVerificationEmail({
     to: DATA.email,
     name: `${DATA.firstname} ${DATA.lastname}`,
-    verificationUrl: `${process.env.URL}/verify?token=${urlToken}`,
+    verificationUrl: `${process.env.URL}/verify?token=${urlTokenDATA}`,
     lang: DATA.country
   });
 
   const ACCESS_TOKEN: string = signToken({
     id: (userIn._id).toJSON(),
     username: userIn.username,
-    created_at: new Date()
+    createdAt: new Date()
   },
     "access", '15m'
   );
   const REFRESH_TOKEN: string = signToken({
     id: (userIn._id).toJSON(),
     username: userIn.username,
-    created_at: new Date()
+    createdAt: new Date()
   },
     "refresh", '60d'
   );

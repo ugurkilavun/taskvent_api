@@ -1,28 +1,6 @@
+// * Response Types
 
-
-
-export type authResponseType1 = {
-  response: {
-    message: string;
-    access_token?: string;
-    refresh_token?: string;
-    projectDatas?: {
-      project?: {
-        projectID: string;
-        title: string;
-        description: string;
-        tags: [string];
-        createdAt: Date;
-      },
-      tasks?: tasksType;
-    },
-    projects?: projectsType,
-  };
-  userId: string;
-  HTTPStatusCode: number;
-};
-// !00000000000000000000000000000000000000000
-
+// Tasks
 export type taskMemberType = {
   firstname: string;
   lastname: string;
@@ -39,6 +17,7 @@ export type tasksType = {
   status: string;
 }[];
 
+// Teams
 export type teamsType = {
   teamID: string;
   title: string;
@@ -49,6 +28,7 @@ export type teamsType = {
   members?: taskMemberType;
 }[];
 
+// Projects
 export type projectsType = {
   projectID: string;
   title: string;
@@ -66,10 +46,10 @@ export type projectResponseType = {
   HTTPStatusCode: number;
 };
 
+// Auths
 export type authResponseType = {
   message: string;
   accessToken?: string;
   refreshToken?: string;
   HTTPStatusCode: number;
 };
-// export type newauthResponseType = {}

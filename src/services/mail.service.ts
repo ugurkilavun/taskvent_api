@@ -6,7 +6,7 @@ import { evTemplateSelector, fpTemplateSelector } from "./mail/utils";
 // Types
 import { mailType } from "../types/mails.type";
 // Middlewares
-import { logger } from "../middlewares/logger.middleware";
+import { Logger } from "../middlewares/logger.middleware";
 
 // .env config
 dotenv.config({ quiet: true });
@@ -16,7 +16,7 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl, lang }:
   const initialPeriod = performance.now();
 
   // Logger
-  const logg2r = new logger();
+  const logger = new Logger();
 
   try {
     const { template, subject }: mailType = evTemplateSelector(lang);
@@ -34,7 +34,7 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl, lang }:
       html: htmlTemplate,
     });
     // Logger - RESPONSE
-    logg2r.create({
+    logger.create({
       timestamp: new Date(),
       level: "AUDIT",
       logType: "verification mail",
@@ -45,7 +45,7 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl, lang }:
     }, { file: "mails", seeLogConsole: true });
   } catch (error: any) {
     // Logger - RESPONSE
-    logg2r.create({
+    logger.create({
       timestamp: new Date(),
       level: "AUDIT",
       logType: "verification mail",
@@ -67,7 +67,7 @@ export const sendPasswordResetLink = async ({ to, name, resetUrl, lang }: { to: 
   const initialPeriod = performance.now();
 
   // Logger
-  const logg2r = new logger();
+  const logger = new Logger();
 
   try {
     const { template, subject }: mailType = fpTemplateSelector(lang);
@@ -85,7 +85,7 @@ export const sendPasswordResetLink = async ({ to, name, resetUrl, lang }: { to: 
       html: htmlTemplate,
     });
     // Logger - RESPONSE
-    logg2r.create({
+    logger.create({
       timestamp: new Date(),
       level: "AUDIT",
       logType: "password reset mail",
@@ -96,7 +96,7 @@ export const sendPasswordResetLink = async ({ to, name, resetUrl, lang }: { to: 
     }, { file: "mails", seeLogConsole: true });
   } catch (error: any) {
     // Logger - RESPONSE
-    logg2r.create({
+    logger.create({
       timestamp: new Date(),
       level: "AUDIT",
       logType: "Password reset mail",

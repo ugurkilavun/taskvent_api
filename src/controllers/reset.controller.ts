@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 // Services
 import { forgotPassword, resetPassword } from "../services/reset.service";
 // Utils
-import { AuthExceptionHandler } from '../utils/customErrorHandlers.util';
-import { hashURLToken } from '../utils/urlTokens.util';
+import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+import { URLToken } from '../utils/urlTokens.util';
 
 // Class
-const AuthExceptionHandleTemp = new AuthExceptionHandler();
+const exceptionHandlers = new ExceptionHandlers();
+const urlToken = new URLToken;
 
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
@@ -14,8 +15,9 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
   // Datas
   const { email } = req.body;
 
-  await AuthExceptionHandleTemp.Handle(
+  await exceptionHandlers.authHandler(
     { file: "resets", level: "RESPONSE", logType: "forgotpassword", service: "reset.service" },
+    "mobile",
     req,
     res,
     () => forgotPassword(email)
@@ -25,13 +27,14 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
 export const resetPasswordController = async (req: Request, res: Response) => {
 
   // Datas
-  const token: any = req.query.token;
-  const hashedToken = hashURLToken(token);
+  const token: any = req.params.token;
+  const hashedToken = urlToken.hash(token);
 
   const { password, rePassword }: any = req.body;
 
-  await AuthExceptionHandleTemp.Handle(
+  await exceptionHandlers.authHandler(
     { file: "resets", level: "RESPONSE", logType: "resetpassword", service: "reset.service" },
+    "mobile",
     req,
     res,
     () => resetPassword(hashedToken, password, rePassword)

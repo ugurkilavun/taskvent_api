@@ -12,6 +12,7 @@ const Schema = new mongoose.Schema({
   dateOfBirth: Date,
   country: String, // Exp: "TR", "US", "DE"
   createdAt: Date,
+  verifiedAccount: Boolean,
 }, {
   timestamps: false,
   versionKey: false,
