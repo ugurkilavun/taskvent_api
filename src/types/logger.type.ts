@@ -1,24 +1,65 @@
-export type levelType = "INFO" | "DEBUG" | "WARN" | "ERROR" | "FATAL" | "REQUEST" | "RESPONSE" | "SECURITY" | "AUDIT" | "PERFORMANCE" | "SYSTEM";
-export type errorType = "STATCODEERROR" | "SYNTAXERROR" | "TYPEERROR" | "SERVERERROR" | "MAILERROR" | "VERIFYERROR" | "AUTHERROR" | "ANYERROR" | "TOKENERROR" | undefined;
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 
-export type loggerType = {
-  requestID?: string,
-  timestamp?: Date,
-  level: levelType,
-  logType: string,
-  message: string,
-  service: string,
-  userID?: string,
-  token?: string,
-  username?: string,
-  ip?: string,
-  endpoint?: string,
-  method?: string,
-  userAgent?: string,
-  statusCode?: number,
-  durationMs?: number,
-  details?: {
-    error?: errorType,
-    stack?: string
-  }
+type HttpHeaders = {
+  contentType?: string;
+  userAgent?: string;
+  accept?: string;
+  acceptEncoding?: string;
+  connection?: string;
+  contentLength?: string; // Number
+  host?: string;
+};
+
+type RequestInfo = {
+  method?: string;
+  url?: string;
+  path?: string;
+  // query?: Record<string, any>;
+  // params?: Record<string, any>;
+  // body?: any;
+  ip?: string;
+  httpVersion: string;
+  headers?: HttpHeaders;
+
+};
+
+type ResponseInfo = {
+  statusCode?: number;
+  durationMs?: number;
+  headers?: HttpHeaders;
+  // body?: any;
+};
+
+type UserInfo = {
+  id?: string;
+  token?: string;
+  email?: string;
+};
+
+export type ErrorInfo = {
+  name?: string;
+  message: string;
+  stack?: string;
+  // code?: string | number; // Application-specific error code
+};
+
+export type LoggerType = {
+  logID?: string;
+  timestamp: Date | string;
+  level: LogLevel;
+  service: string;
+  environment?: string;
+  // hostname?: string;
+
+  message: string;
+
+  // Request and response details
+  request?: RequestInfo;
+  response?: ResponseInfo;
+
+  // User informations
+  user?: UserInfo;
+
+  // Error condition
+  error?: ErrorInfo;
 };

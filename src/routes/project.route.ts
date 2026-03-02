@@ -30,10 +30,10 @@ router.patch('/projects/:projectID', authMiddleware.checkToken, patchProjectsCon
 // PATCH /projects/:projectId/teams/:teamId - Team güncelleme (kısmi)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // Tasks
-// router.post('/projects/:projectid/task', authControl, createTaskController);
-// router.get('/projects/:projectid/task/:taskid', authControl, getTaskController);
+// router.post('/projects/:projectid/task', authControl, createTaskController); // Add task
+// router.get('/projects/:projectid/task/:taskid', authControl, getTaskController); // Get task
 // Teams
-// router.post('/team', authControl, createTeamController);
-// router.get('/team/:teamid', authControl, getTeamController);
+// router.post('/team', authControl, createTeamController); // Add task
+// router.get('/team/:teamid', authControl, getTeamController); // Get task
 
 export default router;

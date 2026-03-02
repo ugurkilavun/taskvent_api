@@ -30,7 +30,7 @@ const refreshService = async (token: string | undefined): Promise<authResponseTy
     createdAt: new Date()
   };
 
-  const ACCESS_TOKEN: string = signToken(payload, "access", '15m'); // 15m
+  const ACCESS_TOKEN: string = signToken(payload, "access"); // 15m
 
   return {
     message: "Token created.",

@@ -8,14 +8,11 @@ import { ExceptionHandlers } from '../utils/customExceptionHandlers';
 const exceptionHandlers = new ExceptionHandlers();
 
 const verifyController = async (req: Request, res: Response) => {
-
   // Data
   const token: string = req.query.token.toString();
 
   await exceptionHandlers.authHandler(
-    { file: "verifications", level: "RESPONSE", logType: "verify", service: "verify.service" },
     "mobile",
-    req,
     res,
     () => verifyService(token)
   );

@@ -78,19 +78,21 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
     lang: DATA.country
   });
 
-  const ACCESS_TOKEN: string = signToken({
-    id: (userIn._id).toJSON(),
-    username: userIn.username,
-    createdAt: new Date()
-  },
-    "access", '15m'
+  const ACCESS_TOKEN: string = signToken(
+    {
+      id: (userIn._id).toJSON(),
+      username: userIn.username,
+      createdAt: new Date()
+    },
+    "access"
   );
-  const REFRESH_TOKEN: string = signToken({
-    id: (userIn._id).toJSON(),
-    username: userIn.username,
-    createdAt: new Date()
-  },
-    "refresh", '60d'
+  const REFRESH_TOKEN: string = signToken(
+    {
+      id: (userIn._id).toJSON(),
+      username: userIn.username,
+      createdAt: new Date()
+    },
+    "refresh"
   );
 
   return {

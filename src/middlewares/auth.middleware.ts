@@ -1,11 +1,7 @@
 import jwt, { TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
-// Middlewares
-import { Logger } from './logger.middleware';
 // Utils
 import { statusCodeErrors } from '../utils/customErrors.util';
-// Types
-import { errorType } from "../types/logger.type";
 
 export class AuthMiddleware {
 
@@ -24,46 +20,22 @@ export class AuthMiddleware {
 
   // Solution: https://runebook.dev/en/docs/typescript/docs/handbook/2/classes/this-based-type-guards
   public checkToken = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    // For performance
-    const initialPeriod = performance.now();
-
-    // Datas
-    // let token: string | undefined;
-
-    // Logger
-    const logger = new Logger();
-
-    // ? For Logger
-    // Error Messages
-    let errorType: errorType = undefined;
-    let errorMessage: string = undefined;
-    let errorStack: string = undefined;
-    // Response Messages
-    let responseMessage: string = undefined;
 
     try {
-
       // Initial Check
       if (!req.headers.authorization && !req.cookies) throw new statusCodeErrors("Token is missing or invalid.", 401);;
 
       const token: any = await this.getToken(req.headers.authorization, req.cookies, "accessToken");
       if (!token) throw new statusCodeErrors("Token is invalid.", 401);
 
-      const decoded: any = jwt.verify(token, process.env.ACCESS_SECRET);
+      const decoded: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
       res.locals.user = { id: decoded.id, username: decoded.username };
-
-      responseMessage = "Valid token.";
 
       next();
     } catch (error: any) {
 
       if (error instanceof statusCodeErrors) {
-
-        // For Logger
-        errorType = "STATCODEERROR";
-        errorMessage = error?.message;
-        errorStack = error?.stack;
 
         res.status(error.statusCode).json({
           message: error.message,
@@ -71,61 +43,20 @@ export class AuthMiddleware {
 
       } else if (error instanceof TokenExpiredError) {
 
-        // For Logger
-        errorType = "TOKENERROR";
-        errorMessage = error?.message;
-        errorStack = error?.stack;
-
         res.status(401).json({
           message: "Access token has expired.",
           error: "TOKEN_EXPIRED"
         });
 
-      } else if (error instanceof JsonWebTokenError) {
-
-        // For Logger
-        errorType = "TOKENERROR";
-        errorMessage = error?.message;
-        errorStack = error?.stack;
-
+      } else if (error instanceof JsonWebTokenError)
 
         res.status(401).json({
           message: "Access token invalid.",
-          // error: "INVALID_TOKEN"
+          error: "INVALID_TOKEN"
         });
 
-      } else {
+      else throw new Error(error);
 
-        // For Logger
-        errorType = "SERVERERROR";
-        errorMessage = error instanceof Error ? error.message : "Unknown error";
-        errorStack = error instanceof Error ? error.stack : undefined;
-
-        res.status(500).json({
-          message: "Server error."
-        });
-
-      }
-    } finally {
-      // Logger - RESPONSE
-      logger.create({
-        timestamp: new Date(),
-        level: "AUDIT",
-        logType: "auth",
-        message: errorMessage ?? responseMessage,
-        service: "auth.middleware",
-        username: req.body?.username,
-        ip: req.ip,
-        endpoint: req.url,
-        method: req.method,
-        userAgent: req.get('user-agent'),
-        statusCode: res.statusCode,
-        durationMs: performance.now() - initialPeriod,
-        details: {
-          error: errorType,
-          stack: errorStack
-        }
-      }, { file: "auths", seeLogConsole: true });
     }
   }
 

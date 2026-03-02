@@ -20,20 +20,22 @@ const loginService = async (username?: string, password?: string): Promise<authR
   const passwdResult = await bcrypt.compare(password, userDATAS.password);
   if (!passwdResult) throw new statusCodeErrors("Username or email not found.", 401);
 
-  const ACCESS_TOKEN: string = signToken({
-    id: (userDATAS._id).toJSON(),
-    username: userDATAS.username,
-    createdAt: new Date()
-  },
-    "access", '15m'
+  const ACCESS_TOKEN: string = signToken(
+    {
+      id: (userDATAS._id).toJSON(),
+      username: userDATAS.username,
+      createdAt: new Date()
+    },
+    "access"
   ); // 15m
-  const REFRESH_TOKEN: string = signToken({
-    id: (userDATAS._id).toJSON(),
-    username: userDATAS.username,
-    createdAt: new Date()
-  },
-    "refresh", '60d'
-  ); // 60d
+  const REFRESH_TOKEN: string = signToken(
+    {
+      id: (userDATAS._id).toJSON(),
+      username: userDATAS.username,
+      createdAt: new Date()
+    },
+    "refresh",
+  ); // 365d
 
   return {
     message: "Login successful.",
