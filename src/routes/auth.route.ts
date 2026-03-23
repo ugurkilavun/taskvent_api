@@ -32,12 +32,12 @@ router.post('/auth/mobile/login', loginMobileController);
 router.post('/auth/web/register', registerWebController);
 router.post('/auth/mobile/register', registerMobileController);
 // Refresh Route
-router.post('/auth/refresh', authMiddleware.refreshMiddleware, refreshController);
-// Logout
+router.post('/auth/refresh', refreshController);
+// Logout Route
 router.post('/auth/logout', authMiddleware.middleware, logoutController);
-// Verify
+// Verify Route
 router.get('/auth/verify/:token', verifyController);
-// Reset(s): Forgot password & Reset password
+// Reset(s) Route: Forgot password & Reset password
 router.post('/auth/forgot-password', forgotPasswordController);
 router.post('/auth/reset-password/:token', resetPasswordController);
 

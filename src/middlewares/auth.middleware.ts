@@ -9,58 +9,6 @@ import { platformType } from "../types/platform.type";
 export class AuthMiddleware {
 
   /**
-    * Middleware to refresh user sessions by validating and cross-referencing JWT tokens.
-    * Extracts Access and Refresh tokens from multiple sources (Headers or Cookies),
-    * verifies the integrity of the Refresh Token, and ensures the user identity
-    * matches between both tokens to prevent session hijacking.
-    * @param req - Express request object containing headers and cookies.
-    * @param res - Express response object to store local user data.
-    * @param next - Express callback to pass control to the next middleware.
-    */
-  public refreshMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-
-    this.validateAuthPresence(req.headers.authorization, req.cookies);
-
-    // Datas
-    const { token: accessToken, platform }:
-      { token: string | undefined, platform: platformType } = this.resolveTokenSource(req.headers.authorization, req.cookies, TokenType.accessToken);
-
-    const refreshToken: string | undefined = this.extractRefreshToken(req, platform);
-
-    if (!refreshToken) throw new statusCodeErrors("Token is missing.", 401);
-
-    if (!accessToken || !refreshToken || !platform) throw new statusCodeErrors("Token is missing or invalid.", 401);
-
-    const decodedAccessToken: any = jwt.decode(accessToken);
-    const decodedRefreshToken: any = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-
-    if (decodedAccessToken.id !== decodedRefreshToken.id && decodedAccessToken.username !== decodedRefreshToken.username) throw new statusCodeErrors("Session validation failed.", 401);
-
-    res.locals.user = { id: decodedAccessToken.id, username: decodedAccessToken.username };
-    res.locals.platform = platform;
-
-    next();
-
-  };
-
-  /**
-   * Extracts the refresh token from the request based on the platform.
-   * @param req - The Express Request object.
-   * @param platform - Platform type ('web' or 'mobile').
-   */
-  private extractRefreshToken(req: Request, platform: string): string | undefined {
-
-    if (platform === "web") {
-      const { token }: { token: string | undefined } = this.resolveTokenSource(req.headers.authorization, req.cookies, TokenType.refreshToken);
-      return token;
-    };
-
-    if (platform === "mobile") return req.body.refreshToken;
-
-    return undefined;
-  };
-
-  /**
     * Middleware to secure application routes by validating JWT tokens in the request.
     * Verifies the token's presence, integrity, and expiration before proceeding.
     * @param req - Express request object containing headers and cookies
@@ -109,7 +57,7 @@ export class AuthMiddleware {
    * @throws {statusCodeErrors} 400 - If multiple authentication methods are provided.
    * @throws {statusCodeErrors} 401 - If no authentication token or cookie is found.
    */
-  private validateAuthPresence(authHeader: string, cookies: object): void {
+  public validateAuthPresence(authHeader: string, cookies: object): void {
 
     // Datas
     const hasHeader: boolean = !!authHeader;

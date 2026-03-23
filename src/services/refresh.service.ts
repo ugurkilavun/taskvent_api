@@ -9,6 +9,7 @@ import { UserRepository } from "../repositories/user.repository";
 // Types
 import { authResponseType } from '../types/responses.type';
 import { payloadType } from "../types/jwt.type";
+import { platformType } from '../types/platform.type';
 
 // .env config
 dotenv.config({ quiet: true });
@@ -16,9 +17,18 @@ dotenv.config({ quiet: true });
 // Class
 const userRepository = new UserRepository();
 
-const refreshService = async (res: Response): Promise<void> => {
+const refreshService = async (accessToken: string, refreshToken: string, platform: platformType): Promise<authResponseType> => {
 
-  const userDATAS: any = await userRepository.findById(res.locals.user.id);
+  if (!refreshToken) throw new statusCodeErrors("Token is missing.", 401);
+
+  if (!accessToken || !refreshToken || !platform) throw new statusCodeErrors("Token is missing or invalid.", 401);
+
+  const decodedAccessToken: any = jwt.decode(accessToken);
+  const decodedRefreshToken: any = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+  if (decodedAccessToken.id !== decodedRefreshToken.id && decodedAccessToken.username !== decodedRefreshToken.username) throw new statusCodeErrors("Session validation failed.", 401);
+
+  const userDATAS: any = await userRepository.findById(decodedAccessToken.id);
   if (!userDATAS) throw new statusCodeErrors("Token is invalid.", 401);
 
   const payload: payloadType = {
@@ -29,24 +39,11 @@ const refreshService = async (res: Response): Promise<void> => {
 
   const ACCESS_TOKEN: string = signToken(payload, "access"); // 15m
 
-  if (res.locals.client === "web") {
-    res
-      .status(200)
-      .cookie('accessToken', ACCESS_TOKEN, {
-        httpOnly: true,
-        secure: true, // process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        // maxAge: 15 * 60 * 1000 // 15 min.
-      })
-      .json({
-        message: "Token created",
-      });
-  }
-
-  if (res.locals.client === "mobile") {
-    res.status(200).json({ message: "Token created.", accessToken: ACCESS_TOKEN });
-  }
-
+  return {
+    message: "Token created.",
+    statusCode: 200,
+    accessToken: ACCESS_TOKEN,
+  };
 };
 
 export default refreshService;

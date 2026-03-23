@@ -46,6 +46,37 @@ export class HttpResponse {
   };
 
   /**
+   * Sends the authentication response using a platform-specific strategy.
+   * @param res - The Express Response object.
+   * @param statusCode - HTTP status code (e.g., 200, 201).
+   * @param platform - Client type ('web' or 'mobile'). Defaults to 'mobile'.
+   * @param data - Payload containing tokens (refreshToken) and response messages.
+   */
+  public refresh(
+    res: Response,
+    statusCode: number,
+    platform: platformType = "mobile",
+    data: Record<string, string>
+  ): void {
+
+    if (platform === "mobile") {
+      res.status(statusCode).json(data);
+    };
+
+    if (platform === "web") {
+      res
+        .status(statusCode)
+        .cookie('accessToken', data.accessToken, {
+          httpOnly: true,
+          secure: appConfig.nodeEnv === "production",
+          sameSite: 'strict',
+          // maxAge: 15 * 60 * 1000 // 15 min.
+        })
+        .json({ message: data.message });
+    };
+  };
+
+  /**
    * Descption
    * @param res - The Express Response object.
    * @param message - A descriptive message providing context about the status.
