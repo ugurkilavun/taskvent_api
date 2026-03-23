@@ -7,6 +7,7 @@ import { UserRepository } from "../repositories/user.repository";
 import { ResetRepository } from "../repositories/reset.repository";
 // Types
 import { authResponseType } from "../types/responses.type";
+import { defaultResponseType } from "../types/responses.type";
 // Services
 import { sendPasswordResetLink } from "./mail.service";
 
@@ -16,7 +17,7 @@ const resetRepository = new ResetRepository();
 const userRepository = new UserRepository();
 
 // * Forgot password
-export const forgotPassword = async (email?: string): Promise<authResponseType> => {
+export const forgotPassword = async (email?: string): Promise<defaultResponseType> => {
 
   if (email === undefined) throw new statusCodeErrors("Incomplete data.", 400);
 
@@ -39,18 +40,18 @@ export const forgotPassword = async (email?: string): Promise<authResponseType> 
   sendPasswordResetLink({
     to: DATA.email,
     name: `${DATA.firstname} ${DATA.lastname}`,
-    resetUrl: `${process.env.URL}/resetPassword/${urlTokenDATA}`,
+    resetUrl: `${process.env.URL}/auth/reset-password/${urlTokenDATA}`,
     lang: DATA.country
   });
 
   return {
     message: "If an account with that email exists, we have sent password reset instructions.",
-    HTTPStatusCode: 200
+    statusCode: 200
   };
 };
 
 // * Reset password
-export const resetPassword = async (token?: string, password?: string, rePassword?: string): Promise<authResponseType> => {
+export const resetPassword = async (token?: string, password?: string, rePassword?: string): Promise<defaultResponseType> => {
 
   // Token: Undefined
   if (token === undefined) throw new statusCodeErrors("Incomplete data.", 400);
@@ -78,6 +79,6 @@ export const resetPassword = async (token?: string, password?: string, rePasswor
 
   return {
     message: "The password has been successfully updated.",
-    HTTPStatusCode: 200
+    statusCode: 200
   };
 };

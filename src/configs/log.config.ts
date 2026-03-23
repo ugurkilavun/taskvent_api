@@ -6,11 +6,9 @@ export class LogFile {
   private readonly LOGS_DIR = path.join(__dirname, '..', 'logs');
 
   private readonly LOG_FILES = [
-    'auths.json',
-    'tasks.json',
-    'teams.json',
-    'projects.json',
-    'servers.json'
+    'info.json',
+    'warn.json',
+    'error.json',
   ];
 
   private readonly EMPTY_JSON = JSON.stringify([], null, 2);

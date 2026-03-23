@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt, { TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 // Types
-import { authResponseType, projectResponseType } from "../types/responses.type";
+import { authResponseType } from "../types/responses.type";
 import { responseType, transactionType } from "../types/cusExceptionHandlers.type";
 // Middlewares
 // Utils
@@ -21,14 +21,15 @@ export class ExceptionHandlers {
     ...args: Args): Promise<void> {
 
     try {
-      console.log("res:", res)
-      const { message, accessToken, refreshToken, HTTPStatusCode }: authResponseType = await func(...args);
+      const { message, accessToken, refreshToken, statusCode }: authResponseType = await func(...args);
 
       if (responseType === "mobile") {
-        res.status(HTTPStatusCode).json({ message, accessToken, refreshToken });
+        res.locals.client = "mobile";
+        res.status(statusCode).json({ message, accessToken, refreshToken });
       } else if (responseType === "web") {
+        res.locals.client = "web";
         res
-          .status(HTTPStatusCode)
+          .status(statusCode)
           .cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: true, // process.env.NODE_ENV === 'production',
@@ -61,7 +62,23 @@ export class ExceptionHandlers {
           error: "REFRESH_TOKEN_EXPIRED"
         });
 
-      } else throw new Error(error);
+      } else if (error instanceof TokenExpiredError) {
+        console.log("401-refresh token has expired.")
+        res.status(401).json({
+          message: "Token has expired.",
+          error: "REFRESH_TOKEN_EXPIRED"
+        });
+
+      } else if (error instanceof JsonWebTokenError) {
+        res.status(401).json({
+          message: "Token is invalid.",
+          error: "INVALID_TOKEN"
+        });
+      }
+      else {
+        console.log(error.name);
+        throw new Error(error);
+      }
 
     }
   };
@@ -70,7 +87,7 @@ export class ExceptionHandlers {
   public async responseHandler<Args extends any[]>(
     transactionType: transactionType,
     res: Response,
-    func: (...args: Args) => Promise<projectResponseType>,
+    func: (...args: Args) => Promise<any>,
     ...args: Args): Promise<void> {
 
     try {
@@ -78,8 +95,8 @@ export class ExceptionHandlers {
       switch (transactionType) {
 
         case "project": {
-          const { message, projects, HTTPStatusCode }: projectResponseType = await func(...args);
-          res.status(HTTPStatusCode).json({ message, projects });
+          const { message, projects, statusCode }: any = await func(...args);
+          res.status(statusCode).json({ message, projects });
           break;
         }
 

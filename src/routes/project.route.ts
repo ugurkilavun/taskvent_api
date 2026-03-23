@@ -15,10 +15,10 @@ dotenv.config({ quiet: true });
 const router: Router = express.Router();
 
 // Projects
-router.post('/projects', authMiddleware.checkToken, createProjectController);
-router.get('/projects', authMiddleware.checkToken, getProjectsController); // Multi
-router.get('/projects/:projectID', authMiddleware.checkToken, getProjectController); // Single
-router.patch('/projects/:projectID', authMiddleware.checkToken, patchProjectsController); // Single
+router.post('/projects', authMiddleware.middleware, createProjectController);
+router.get('/projects', authMiddleware.middleware, getProjectsController); // Multi
+router.get('/projects/:projectID', authMiddleware.middleware, getProjectController); // Single
+router.patch('/projects/:projectID', authMiddleware.middleware, patchProjectsController); // Single
 // * router.delete('/projects/:projectID', authControl, getProjectController); // Single
 // router.patch('/projects', authControl, projectController);
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

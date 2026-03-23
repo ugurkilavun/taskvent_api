@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 // Errors
@@ -15,14 +16,10 @@ dotenv.config({ quiet: true });
 // Class
 const userRepository = new UserRepository();
 
-const refreshService = async (token: string | undefined): Promise<authResponseType> => {
+const refreshService = async (res: Response): Promise<void> => {
 
-  if (!token) throw new statusCodeErrors("Token is missing.", 401);
-
-  const tokenDATA: any = jwt.verify(token, process.env.REFRESH_SECRET);
-
-  const userDATAS: any = await userRepository.findById(tokenDATA.id);
-  if (!userDATAS) throw new statusCodeErrors("Token invalid or expired.", 401);
+  const userDATAS: any = await userRepository.findById(res.locals.user.id);
+  if (!userDATAS) throw new statusCodeErrors("Token is invalid.", 401);
 
   const payload: payloadType = {
     id: (userDATAS._id).toJSON(),
@@ -32,11 +29,24 @@ const refreshService = async (token: string | undefined): Promise<authResponseTy
 
   const ACCESS_TOKEN: string = signToken(payload, "access"); // 15m
 
-  return {
-    message: "Token created.",
-    accessToken: ACCESS_TOKEN,
-    HTTPStatusCode: 200,
-  };
+  if (res.locals.client === "web") {
+    res
+      .status(200)
+      .cookie('accessToken', ACCESS_TOKEN, {
+        httpOnly: true,
+        secure: true, // process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        // maxAge: 15 * 60 * 1000 // 15 min.
+      })
+      .json({
+        message: "Token created",
+      });
+  }
+
+  if (res.locals.client === "mobile") {
+    res.status(200).json({ message: "Token created.", accessToken: ACCESS_TOKEN });
+  }
+
 };
 
 export default refreshService;

@@ -13,7 +13,7 @@ type HttpHeaders = {
 type RequestInfo = {
   method?: string;
   url?: string;
-  path?: string;
+  // path?: string;
   // query?: Record<string, any>;
   // params?: Record<string, any>;
   // body?: any;
@@ -47,9 +47,10 @@ export type LoggerType = {
   logID?: string;
   timestamp: Date | string;
   level: LogLevel;
-  service: string;
+  // service: string;
   environment?: string;
   // hostname?: string;
+  client?: string;
 
   message: string;
 

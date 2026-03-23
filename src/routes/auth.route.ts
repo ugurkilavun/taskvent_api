@@ -1,18 +1,30 @@
 import express, { Router } from 'express';
-import dotenv from 'dotenv';
+// Middlewares
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 // Controllers
+// Availability
+import { usernameAvailabilityController, emailAvailabilityController } from "../controllers/availability.controller";
 // Login
 import { loginWebController, loginMobileController } from "../controllers/login.controller";
 // Register
 import { registerWebController, registerMobileController } from "../controllers/register.controller";
 // Refresh
-import { refreshWebController, refreshMobileController } from "../controllers/refresh.controller";
-
-// .env config
-dotenv.config({ quiet: true })
+import { refreshController } from "../controllers/refresh.controller";
+// Refresh
+import { logoutController } from "../controllers/logout.controller";
+// Verify
+import verifyController from "../controllers/verify.controller";
+// Reset(s): Forgot password & Reset password
+import { forgotPasswordController, resetPasswordController } from "../controllers/reset.controller";
 
 const router: Router = express.Router();
 
+// Class
+const authMiddleware = new AuthMiddleware();
+
+// Availability Route
+router.get('/auth/username-availability/:username', usernameAvailabilityController);
+router.get('/auth/email-availability/:email', emailAvailabilityController);
 // Login Route
 router.post('/auth/web/login', loginWebController);
 router.post('/auth/mobile/login', loginMobileController);
@@ -20,7 +32,13 @@ router.post('/auth/mobile/login', loginMobileController);
 router.post('/auth/web/register', registerWebController);
 router.post('/auth/mobile/register', registerMobileController);
 // Refresh Route
-router.post('/auth/web/refresh', refreshWebController);
-router.post('/auth/mobile/refresh', refreshMobileController);
+router.post('/auth/refresh', authMiddleware.refreshMiddleware, refreshController);
+// Logout
+router.post('/auth/logout', authMiddleware.middleware, logoutController);
+// Verify
+router.get('/auth/verify/:token', verifyController);
+// Reset(s): Forgot password & Reset password
+router.post('/auth/forgot-password', forgotPasswordController);
+router.post('/auth/reset-password/:token', resetPasswordController);
 
 export default router;

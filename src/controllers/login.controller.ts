@@ -2,27 +2,24 @@ import { Request, Response } from 'express';
 // Services
 import loginService from "../services/login.service";
 // Utils
-import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+import catchAsync from '../utils/catchAsync.util';
+import { HttpResponse } from "../utils/response.util";
+// Types
+import { authResponseType } from "../types/responses.type";
 
 // Class
-const exceptionHandlers = new ExceptionHandlers();
+const httpResponse = new HttpResponse();
 
-export const loginWebController = async (req: Request, res: Response): Promise<void> => {
-  // Datas
+export const loginWebController = catchAsync(async (req: Request, res: Response): Promise<void> => {
   const { username, password }: { username: string, password: string } = req.body;
-  await exceptionHandlers.authHandler(
-    "web",
-    res,
-    () => loginService(username, password)
-  );
-};
+  const { message, statusCode, accessToken, refreshToken }: authResponseType = await loginService(username, password);
 
-export const loginMobileController = async (req: Request, res: Response): Promise<void> => {
-  // Datas
+  httpResponse.auth(res, statusCode, "web", { message, accessToken, refreshToken });
+});
+
+export const loginMobileController = catchAsync(async (req: Request, res: Response): Promise<void> => {
   const { username, password }: { username: string, password: string } = req.body;
-  await exceptionHandlers.authHandler(
-    "mobile",
-    res,
-    () => loginService(username, password)
-  );
-};
+  const { message, statusCode, accessToken, refreshToken }: authResponseType = await loginService(username, password);
+
+  httpResponse.auth(res, statusCode, "mobile", { message, accessToken, refreshToken });
+});

@@ -1,6 +1,14 @@
-// * Response Types
+// ? Projects, Teams, Tasks
+export type projectType = {
+  owner: string,
+  teamID: Array<string>,
+  title: string,
+  description: string,
+  tags: Array<string>,
+  createdAt: Date
+};
 
-// Tasks
+// Task
 export type taskMemberType = {
   firstname: string;
   lastname: string;
@@ -17,7 +25,7 @@ export type tasksType = {
   status: string;
 }[];
 
-// Teams
+// Team
 export type teamsType = {
   teamID: string;
   title: string;
@@ -28,7 +36,7 @@ export type teamsType = {
   members?: taskMemberType;
 }[];
 
-// Projects
+// Project
 export type projectsType = {
   projectID: string;
   title: string;
@@ -40,16 +48,24 @@ export type projectsType = {
   owned: boolean;
 }[];
 
-export type projectResponseType = {
-  message: string;
-  projects?: projectsType,
-  HTTPStatusCode: number;
-};
-
-// Auths
+// ? Auths
 export type authResponseType = {
   message: string;
+  statusCode: number;
   accessToken?: string;
   refreshToken?: string;
-  HTTPStatusCode: number;
+};
+
+export type authAvailabilityType = {
+  message: string,
+  statusCode: number,
+  available: boolean,
+};
+
+// ? /==*==\ Response types /==*==\
+// Default response type
+export type defaultResponseType = {
+  message: string;
+  statusCode: number;
+  data?: Array<object>;
 };

@@ -12,30 +12,25 @@ import { UserType } from "../types/users.type";
 import { authResponseType } from "../types/responses.type";
 // Services
 import { sendVerificationEmail } from "./mail.service";
+import { usernameRegex, emailRegex } from "./availability.service";
 
-// .env config
-dotenv.config({ quiet: true });
+import  appConfig from "../configs/app.config";
 
 // Class
 const userRepository = new UserRepository;
 const verifyRepository = new VerifyRepository;
-
-// Class
 const urlToken = new URLToken();
-
-// Email format validation
-const validEmail = (email: string): boolean => {
-  const pattern: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return pattern.test(email);
-};
 
 const registerService = async (DATA: UserType): Promise<authResponseType> => {
 
   if (Object.values(DATA).some(x => x === undefined)) throw new statusCodeErrors("Incomplete data.", 400);
 
-  if (!validEmail(DATA.email)) throw new statusCodeErrors("Invalid email format.", 400);
+  const UsernameLowerCase: string = DATA.username.toLowerCase();
 
-  const username_: unknown = await userRepository.checkEmailOrUsername(DATA.username);
+  if (!usernameRegex.test(DATA.username.toLowerCase())) throw new statusCodeErrors("Invalid username.", 400);
+  if (!emailRegex.test(DATA.email)) throw new statusCodeErrors("Invalid email format.", 400);
+
+  const username_: unknown = await userRepository.checkEmailOrUsername(UsernameLowerCase);
   if (username_) throw new statusCodeErrors("Username already exists.", 409);
 
   const email_: any = await userRepository.checkEmailOrUsername(DATA.email);
@@ -52,7 +47,7 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
   const userIn: any = await userRepository.insertUser({
     firstname: DATA.firstname,
     lastname: DATA.lastname,
-    username: DATA.username,
+    username: UsernameLowerCase,
     email: DATA.email,
     password: paswdHash,
     dateOfBirth: DATA.dateOfBirth,
@@ -74,7 +69,7 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
   sendVerificationEmail({
     to: DATA.email,
     name: `${DATA.firstname} ${DATA.lastname}`,
-    verificationUrl: `${process.env.URL}/verify?token=${urlTokenDATA}`,
+    verificationUrl: `${appConfig.url}/auth/verify/${urlTokenDATA}`,
     lang: DATA.country
   });
 
@@ -97,9 +92,9 @@ const registerService = async (DATA: UserType): Promise<authResponseType> => {
 
   return {
     message: "Registration Successful.",
+    statusCode: 201,
     accessToken: ACCESS_TOKEN,
     refreshToken: REFRESH_TOKEN,
-    HTTPStatusCode: 201
   };
 };
 

@@ -3,59 +3,57 @@ import { Request, Response } from 'express';
 import { createProject, getProject, getProjects, patchProject } from "../services/project.service";
 // import { createTask } from "../services/task.service";
 // Utils
-import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+import catchAsync from "../utils/catchAsync.util";
+import { HttpResponse } from '../utils/response.util';
+// Types
+import { defaultResponseType } from "../types/responses.type";
 
 // Class
-const exceptionHandlers = new ExceptionHandlers();
+const httpResponse = new HttpResponse();
 
-export const createProjectController = async (req: Request, res: Response) => {
-
+// * POST /projects
+export const createProjectController = catchAsync(async (req: Request, res: Response): Promise<void> => {
   // Datas
   const { teamID, title, description, tags }: { teamID: Array<string>, title: string, description: string, tags: Array<string> } = req.body;
   const { id }: { id: string } = res.locals.user;
 
-  await exceptionHandlers.responseHandler(
-    "project",
-    res,
-    () => createProject(id, teamID, title, description, tags)
-  );
-};
+  const { message, statusCode }: defaultResponseType = await createProject(id, teamID, title, description, tags);
 
-export const getProjectsController = async (req: Request, res: Response) => {
+  httpResponse.default(res, message, statusCode,);
+});
 
-  // Datas
-  const { id }: { id: string } = res.locals.user;
-
-  await exceptionHandlers.responseHandler(
-    "project",
-    res,
-    () => getProjects(id)
-  );
-};
-
-export const getProjectController = async (req: Request, res: Response) => {
+// * GET /projects
+export const getProjectsController = catchAsync(async (req: Request, res: Response): Promise<void> => {
 
   // Datas
   const { id }: { id: string } = res.locals.user;
-  const projectID: any = req.params.projectID; // ! Error: 'string | string[]'
 
-  await exceptionHandlers.responseHandler(
-    "project",
-    res,
-    () => getProject(id, projectID)
-  );
-};
+  const { statusCode, message, data }: defaultResponseType = await getProjects(id);
 
-export const patchProjectsController = async (req: Request, res: Response) => {
+  httpResponse.default(res, message, statusCode, data);
+});
+
+// * GET /projects/:projectID
+export const getProjectController = catchAsync(async (req: Request, res: Response): Promise<void> => {
 
   // Datas
   const { id }: { id: string } = res.locals.user;
-  const projectID: any = req.params.projectID; // ! Error: 'string | string[]'
+  const projectID: string = req.params.projectID as string;
+
+  const { message, statusCode, data }: defaultResponseType = await getProject(id, projectID);
+
+  httpResponse.default(res, message, statusCode, data);
+});
+
+// * PATCH /projects/:projectID
+export const patchProjectsController = catchAsync(async (req: Request, res: Response): Promise<void> => {
+
+  // Datas
+  const { id }: { id: string } = res.locals.user;
+  const projectID: string = req.params.projectID as string;
   const { teamID, title, description, tags }: { teamID?: Array<string>, title?: string, description?: string, tags?: Array<string> } = req.body;
 
-  await exceptionHandlers.responseHandler(
-    "project",
-    res,
-    () => patchProject(id, projectID, teamID, title, description, tags)
-  );
-};
+  const { message, statusCode, data }: defaultResponseType = await patchProject(id, projectID, teamID, title, description, tags);
+
+  httpResponse.default(res, message, statusCode, data);
+});

@@ -1,26 +1,20 @@
-import express, { Application, NextFunction, Request, Response } from 'express';
+import express, { Application } from 'express';
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from 'dotenv';
 // Configs
 import connectDB from "./configs/db.config";
 import { LogFile } from "./configs/log.config";
 // Routes
 import auth from "./routes/auth.route";
-import verify from "./routes/verify.route";
-import reset from "./routes/reset.route";
 import project from "./routes/project.route";
 // Middlewares
 import { Logger } from "./middlewares/logger.middleware";
-
-// .env config
-dotenv.config({ quiet: true });
+import { errorHandler } from "./middlewares/error.middleware";
 
 // Class
-// Logger
-const logger = new Logger(); // main
-const logFile = new LogFile(); // main
+const logger = new Logger(); // Logger
+const logFile = new LogFile(); // Log file creation
 
 // Creating directories and files
 logFile.create();
@@ -30,11 +24,10 @@ connectDB();
 
 const app: Application = express();
 
-// Logger middleware
-app.use(logger.middleware);
-
+// Middlewares
 app.use(bodyParser.json()); // To accept JSON data
 app.use(cookieParser()); // Parse Cookie
+app.use(logger.middleware); // HTTP request log
 
 // CORS
 app.use(
@@ -48,17 +41,9 @@ app.use(
 
 // Router usage area
 app.use('/', auth);
-app.use('/', verify);
-app.use('/', reset);
 app.use('/', project);
 
 // https://expressjs.com/en/guide/error-handling.html
-// You define error-handling middleware last, after other app.use() and routes calls;
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.create(req, res, 0, { name: error.name, message: error.message, stack: error.stack });
-  res.status(500).json({
-    message: "Server error!",
-  });
-});
+app.use(errorHandler);
 
 export default app;

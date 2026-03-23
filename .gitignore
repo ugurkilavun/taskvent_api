@@ -4,3 +4,4 @@ npm-debug.*
 dist
 coverage
 logs
+src/tests

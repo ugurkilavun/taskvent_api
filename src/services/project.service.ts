@@ -6,7 +6,8 @@ import { TeamRepository } from "../repositories/team.repository";
 import { TaskRepository } from "../repositories/task.repository";
 import { UserRepository } from "../repositories/user.repository";
 // Types
-import { projectResponseType, projectsType, taskMemberType, tasksType, teamsType } from "../types/responses.type";
+import { projectsType, taskMemberType, tasksType, teamsType } from "../types/projects.type";
+import { defaultResponseType } from "../types/responses.type";
 
 // Class
 const projectRepository = new ProjectRepository();
@@ -34,7 +35,7 @@ const findRole = async (userID: string, owner: string, team: any): Promise<strin
 
 
 // * POST /projects
-export const createProject = async (userID: string, teamID: Array<string>, title: string, description: string, tags: Array<string>): Promise<projectResponseType> => {
+export const createProject = async (userID: string, teamID: Array<string>, title: string, description: string, tags: Array<string>): Promise<defaultResponseType> => {
 
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
   if (title === undefined) throw new statusCodeErrors("Incomplete data.", 400);
@@ -46,13 +47,6 @@ export const createProject = async (userID: string, teamID: Array<string>, title
   // Team not found
   if (typeof teamID === "object")
     if (fiTeamByTeamIDTest.length !== teamID.length) throw new statusCodeErrors("Team not found.", 404);
-
-  // ! Delete
-  // Team owner
-  // fiTeamByTeamIDTest.map((data: any) => {
-  //   if (data.owner.toString() !== userID) throw new statusCodeErrors("Cannot add this team. You must be the team owner.", 401);
-  // });
-  // ! Delete
 
   const inProject: any = await projectRepository.insertProject({
     owner: userID,
@@ -66,13 +60,13 @@ export const createProject = async (userID: string, teamID: Array<string>, title
 
   return {
     message: "Project created.",
-    HTTPStatusCode: 201
+    statusCode: 201
   };
 
 };
 
-// * GET /projects
-export const getProjects = async (userID: string): Promise<projectResponseType> => {
+// * GET /projects - projectResponseType
+export const getProjects = async (userID: string): Promise<defaultResponseType> => {
 
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
 
@@ -84,7 +78,7 @@ export const getProjects = async (userID: string): Promise<projectResponseType> 
   if (fiProjectsByUserID.length === 0 && fiTeamIDByUserID.length === 0)
     return {
       message: "Project(s) not found.",
-      HTTPStatusCode: 200
+      statusCode: 200
     };
 
   // * Member projects
@@ -118,18 +112,18 @@ export const getProjects = async (userID: string): Promise<projectResponseType> 
   };
 
   // Combine
-  let projects: projectsType = ownedProjectsDATA.concat(memberProjectsDATA);
+  const data: projectsType = ownedProjectsDATA.concat(memberProjectsDATA);
 
   return {
     message: "Project(s) found.",
-    projects: projects,
-    HTTPStatusCode: 200
+    statusCode: 200,
+    data: data
   };
 
 };
 
 // * GET /projects/:projectID
-export const getProject = async (userID: string, projectID: string): Promise<projectResponseType> => {
+export const getProject = async (userID: string, projectID: string): Promise<defaultResponseType> => {
 
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
   if (projectID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
@@ -141,14 +135,16 @@ export const getProject = async (userID: string, projectID: string): Promise<pro
 
   // ? Role operations
   const role: string | undefined = await findRole(userID, fiOneProject.owner.toString(), fiTeamByTeamID);
+  let projectOwner: boolean = false;
 
   if (role === undefined) throw new statusCodeErrors("Unauthorized access.", 401);
+
 
   // ? Task operations
   const taskDatas: tasksType = [];
 
   if (role === "owner") {
-
+    projectOwner = true;
     const fiTaskForRoot: any = await taskRepository.findTaskForRoot(projectID);
 
     for (let taskIndex = 0; taskIndex <= fiTaskForRoot.length - 1; taskIndex++) {
@@ -221,34 +217,33 @@ export const getProject = async (userID: string, projectID: string): Promise<pro
       title: fiTeamByTeamID[teamIndex].title,
       description: fiTeamByTeamID[teamIndex].description,
       owner: owner,
-      projectManagers: projectManagers.length > 0 ? projectManagers : undefined,
-      teamLeaders: teamLeaders.length > 0 ? teamLeaders : undefined,
-      members: members.length > 0 ? members : undefined,
+      projectManagers: projectManagers.length >= 1 ? projectManagers : undefined,
+      teamLeaders: teamLeaders.length >= 1 ? teamLeaders : undefined,
+      members: members.length >= 1 ? members : undefined,
     });
   };
 
   return {
     message: "Project found.",
-    projects: [
+    statusCode: 200,
+    data: [
       {
         projectID: fiOneProject._id,
         title: fiOneProject.title,
         description: fiOneProject.description,
         tags: fiOneProject.tags,
         createdAt: fiOneProject.createdAt,
-        tasks: taskDatas,
+        tasks: taskDatas.length >= 1 ? taskDatas : undefined,
         teams: teamDatas,
-        owned: true,
+        owned: projectOwner,
       }
     ],
-
-    HTTPStatusCode: 200
   };
 
 };
 
 // * PATCH /projects/:projectID
-export const patchProject = async (userID: string, projectID: string, teamID?: Array<string>, title?: string, description?: string, tags?: Array<string>): Promise<projectResponseType> => {
+export const patchProject = async (userID: string, projectID: string, teamID?: Array<string>, title?: string, description?: string, tags?: Array<string>): Promise<defaultResponseType> => {
 
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
   if (projectID == undefined) throw new statusCodeErrors("Incomplete data.", 400);
@@ -271,12 +266,19 @@ export const patchProject = async (userID: string, projectID: string, teamID?: A
   if (role === "members" || role === undefined) throw new statusCodeErrors("Unauthorized access.", 401);
 
   // Update
-  const updateProject = projectRepository.updateProjectsByProjectID(projectID, uniqueTeamIDs, title, description, tags);
-  if (!updateProject) throw new statusCodeErrors("Update error.", 400);
+  if (uniqueTeamIDs.length >= 1) {
+    const updateProject = projectRepository.updateProjectsByProjectID(projectID, uniqueTeamIDs, title, description, tags);
+    if (!updateProject) throw new statusCodeErrors("Update error.", 400);
+  };
+
+  if (uniqueTeamIDs.length <= 0) {
+    const updateProject = projectRepository.updateProjectsByProjectID(projectID, undefined, title, description, tags);
+    if (!updateProject) throw new statusCodeErrors("Update error.", 400);
+  };
 
   return {
     message: "Project updated.",
-    HTTPStatusCode: 200
+    statusCode: 200
   };
 
 };

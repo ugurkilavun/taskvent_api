@@ -2,15 +2,12 @@ import { NextFunction, Request, Response } from 'express';
 import fs from "fs";
 import crypto from "crypto";
 import path from "path";
-import chalk from "chalk";
-import dotenv from 'dotenv';
 // Types
 import { LoggerType, LogLevel, ErrorInfo } from "../types/logger.type";
 // Middleware
 import { AuthMiddleware } from "./auth.middleware";
-
-// .env config
-dotenv.config({ quiet: true });
+// Configs
+import appConfig from "../configs/app.config";
 
 // Class
 const authMiddleware = new AuthMiddleware();
@@ -18,77 +15,42 @@ const authMiddleware = new AuthMiddleware();
 export class Logger {
 
   /**
-    * Extract endpoint from URL
-    * @param {string} url - Url
-    */
-  private resolveLogCategory(url: string): { file: string, service: string } {
+   * Records comprehensive log data to a JSON file upon request completion.
+   * This method captures request/response metadata, performance metrics,
+   * authenticated user information, and optional error details. In development
+   * mode, it also outputs a formatted summary to the console.
+   * @param req - The Express request object.
+   * @param res - The Express response object containing locals like 'initialPeriod' and 'user'.
+   * @param file - The target log file name ("info.json", "warn.json", or "error.json").
+   * @param errorInfo - Optional object containing error details (name?, message, stack?).
+   */
+  public async create(req: Request, res: Response, file: "info.json" | "warn.json" | "error.json", errorInfo?: ErrorInfo): Promise<void> {
 
-    const AuthEndpoints: string[] = ["login", "logout", "register", "refresh", "reset", "verify"];
-
-    // ? Resolve the service name from the URL
-    const resolveServiceFromUrl = (selectedEndpoint: string): string => {
-      const splitedUrl: Array<string> = url.split("/").filter((filter: string) => filter);
-      // const authSet = new Set(authEndpoints);
-      splitedUrl.splice(splitedUrl.indexOf(selectedEndpoint), 1);
-
-      for (let i = splitedUrl.length - 1; i >= 0; i--) {
-        if (new Set(AuthEndpoints).has(splitedUrl[i])) return splitedUrl[i];
-      };
-
-      return undefined;
-    };
-
-    if (url.includes("auth")) return { file: "auths", service: resolveServiceFromUrl("auth") };
-    if (url.includes("task")) return { file: "tasks", service: "task" };
-    if (url.includes("team")) return { file: "teams", service: "team" };
-    if (url.includes("project")) return { file: "projects", service: "project" };
-
-    // fileName, service
-    return { file: undefined, service: undefined };
-  };
-
-  /**
-    * It performs logging when the request is completed.
-    * @param {Object} req - Express request object
-    * @param {Object} res - Express response object
-    * @param {number} duration - Request completion time (ms)
-    */
-  public async create(req: Request, res: Response, duration: number, errorInfo?: ErrorInfo): Promise<void> {
-
-    // * Return undefined for 5xx responses
-    if (Number(res.statusCode.toString().at(0)) === 5) return;
-
-    //  File & Service
-    const { file, service } = this.resolveLogCategory(req.url);
-
-    const filePath: string = path.join(__dirname, '..', 'logs', `${!file ? "servers" : file}.json`);
+    const filePath: string = path.join(__dirname, '..', 'logs', file);
     const TEMP_DATA: any = fs.readFileSync(filePath);
     const data = JSON.parse(TEMP_DATA);
+    const duration = performance.now() - res.locals.initialPeriod;
 
     // Logger Varibles
     const LOGID = crypto.randomUUID();
-    const DATENOW = new Date();
+    const DATENOW = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
     // Make directories
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
     // Log varible
     const message: string = res.locals.responseMessage ? res.locals.responseMessage : res.statusMessage;
-    const rowToken: string = await authMiddleware.getToken(req.headers.authorization, req.cookies, "accessToken");
-    const token: string = !rowToken ? undefined : rowToken.split(".")[0];
-    const level: LogLevel = !errorInfo ?
-      Number(res.statusCode.toString().at(0)) === 4 ?
-        "ERROR" :
-        "INFO" :
-      "FATAL";
+    const { token }: { token: string } = await authMiddleware.resolveTokenSource(req.headers.authorization, req.cookies, "accessToken");
+    const splitedToken: string = !token ? undefined : token.split(".")[0];
+    const level: LogLevel = this.parseLogLevel(res.statusCode);
 
     const newData: LoggerType =
     {
       logID: LOGID,
       timestamp: DATENOW,
       level: level,
-      service: `${service}.service`,
-      environment: process.env.NODE_ENV,
+      environment: appConfig.nodeEnv,
+      client: res.locals.client,
       message: message,
 
       // Request and response details
@@ -96,7 +58,6 @@ export class Logger {
       request: {
         method: req.method,
         url: req.url,
-        path: req.path,
         ip: req.ip,
         httpVersion: req.httpVersion,
         headers: {
@@ -119,11 +80,11 @@ export class Logger {
         },
       },
 
-      // User information
+      // User informations
       user: {
         id: res.locals.user?.id,
-        token: token && `${token}.****.****`,
-        email: req.body?.username
+        token: splitedToken && `${splitedToken}.****.****`,
+        email: req.body?.username,
       },
 
       // Error condition
@@ -141,38 +102,46 @@ export class Logger {
     // Write file
     fs.writeFileSync(filePath, jsonData, 'utf8');
 
-    if (process.env.NODE_ENV == "development") {
-      console.log(`\x1b[93m[${DATENOW}]  ${level}  ${req.method}  ${req.originalUrl}\x1b[0m`);
-      console.log(`\x1b[93mRequestID: ${LOGID}  UserID: ${res.locals.user?.id}  IP: ${req.ip}\x1b[0m`);
-      console.log(`\x1b[93mService: ${req.originalUrl}  Status Code: ${res.statusCode}  Duration: ${duration}\x1b[0m`);
-      console.log(`\x1b[93mMessage: ${message}\x1b[0m`);
-      console.log(chalk.dim("─".repeat(110)));
-    }
+    // [2024-01-15 10:23:45] INFO: POST /auth/web/login 200 — 43ms
+    if (appConfig.nodeEnv === "development" && level === "INFO") console.log(`\x1b[36m[${DATENOW}] ${level}: ${req.method} ${req.url} ${res.statusCode} — ${duration.toFixed(2)}\x1b[0m`);
+    if (appConfig.nodeEnv === "development" && level === "WARN") console.log(`\x1b[93m[${DATENOW}] ${level}: ${req.method} ${req.url} ${res.statusCode} — ${duration.toFixed(2)}\x1b[0m`);
+    if (appConfig.nodeEnv === "development" && level === "ERROR") console.log(`\x1b[31m[${DATENOW}] ${level}: ${req.method} ${req.url} ${res.statusCode} — ${duration.toFixed(2)}\x1b[0m`);
 
   };
 
   /**
    * It performs logging when the request is completed.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {number} next - Express next method (NextFunction)
+   * @param req - Express request object
+   * @param res - Express response object
+   * @param next - Express next method (NextFunction)
    */
   // Solution: https://runebook.dev/en/docs/typescript/docs/handbook/2/classes/this-based-type-guards
   public middleware = (req: Request, res: Response, next: NextFunction): void => {
 
     // ? Varibles
-    const initialPeriod: number = performance.now();
+    res.locals.initialPeriod = performance.now();
 
-    // Response message
+    // Get response message
     this.getResponseMessage(res);
 
     res.on('finish', () => {
       try {
 
-        this.create(req, res, performance.now() - initialPeriod);
+        const statusCode: number = Number(res.statusCode.toString()[0]);
+
+        // Warn
+        if (statusCode === 4) {
+          this.create(req, res, "warn.json");
+        };
+
+        // Info
+        if (statusCode === 2) {
+          this.create(req, res, "info.json");
+        };
 
       } catch (error: any) {
-        throw new Error(error);
+        // throw new Error(error);
+        if (appConfig.nodeEnv === "development") console.log("/===*===\ Logger Error /===*===\ \n\r", error);
       }
 
     });
@@ -190,6 +159,24 @@ export class Logger {
 
       // Call original method
       return originalJson.call(this, body);
+    };
+  };
+
+  /**
+   * Determines the appropriate log level based on the HTTP status code category.
+   * - 2xx (Success)     -> INFO
+   * - 4xx (Client Error) -> WARN
+   * - 5xx (Server Error) -> ERROR
+   * @param statusCode - The HTTP status code to evaluate (e.g., 200, 404, 500)
+   */
+  private parseLogLevel(statusCode: number): LogLevel {
+    const category: number = Number(statusCode.toString()[0]);
+
+    switch (category) {
+      case 2: return "INFO";
+      case 4: return "WARN";
+      case 5: return "ERROR";
+      default: return "DEBUG";
     };
   };
 

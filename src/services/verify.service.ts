@@ -2,17 +2,17 @@
 import { statusCodeErrors } from "../utils/customErrors.util";
 import { URLToken } from "../utils/urlTokens.util";
 // Repositories
-import { VerifyRepository} from "../repositories/verify.repository";
+import { VerifyRepository } from "../repositories/verify.repository";
 import { UserRepository } from "../repositories/user.repository";
 // Types
-import { authResponseType } from "../types/responses.type";
+import { defaultResponseType } from "../types/responses.type";
 
 // Class
 const urlToken = new URLToken();
 const userRepository = new UserRepository();
 const verifyRepository = new VerifyRepository();
 
-const verifyService = async (token: string): Promise<authResponseType> => {
+const verifyService = async (token: string): Promise<defaultResponseType> => {
 
   if (!token) throw new statusCodeErrors("Token required.", 400);
 
@@ -35,7 +35,7 @@ const verifyService = async (token: string): Promise<authResponseType> => {
 
   return {
     message: "Email verified.",
-    HTTPStatusCode: 200
+    statusCode: 200
   };
 
 };

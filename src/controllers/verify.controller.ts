@@ -2,20 +2,22 @@ import { Request, Response } from 'express';
 // Services
 import verifyService from "../services/verify.service";
 // Utils
-import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+import catchAsync from "../utils/catchAsync.util";
+import { HttpResponse } from "../utils/response.util";
+// Types
+import { defaultResponseType } from "../types/responses.type";
 
 // Class
-const exceptionHandlers = new ExceptionHandlers();
+const httpResponse = new HttpResponse();
 
-const verifyController = async (req: Request, res: Response) => {
+const verifyController = catchAsync(async (req: Request, res: Response): Promise<void> => {
+
   // Data
-  const token: string = req.query.token.toString();
+  const token: string = req.params.token.toString();
 
-  await exceptionHandlers.authHandler(
-    "mobile",
-    res,
-    () => verifyService(token)
-  );
-};
+  const { message, statusCode }: defaultResponseType = await verifyService(token);
+
+  httpResponse.default(res, message, statusCode);
+});
 
 export default verifyController;

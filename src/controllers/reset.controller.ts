@@ -2,35 +2,36 @@ import { Request, Response } from 'express';
 // Services
 import { forgotPassword, resetPassword } from "../services/reset.service";
 // Utils
-import { ExceptionHandlers } from '../utils/customExceptionHandlers';
+// import { ExceptionHandlers } from '../utils/customExceptionHandlers';
 import { URLToken } from '../utils/urlTokens.util';
+import catchAsync from "../utils/catchAsync.util";
+import { HttpResponse } from "../utils/response.util";
+// Types
+import { defaultResponseType } from "../types/responses.type";
 
 // Class
-const exceptionHandlers = new ExceptionHandlers();
-const urlToken = new URLToken;
+const httpResponse = new HttpResponse();
+const urlToken = new URLToken();
 
+export const forgotPasswordController = catchAsync(async (req: Request, res: Response) => {
 
-export const forgotPasswordController = async (req: Request, res: Response) => {
   // Datas
   const { email } = req.body;
 
-  await exceptionHandlers.authHandler(
-    "mobile",
-    res,
-    () => forgotPassword(email)
-  );
-};
+  const { message, statusCode }: defaultResponseType = await forgotPassword(email);
 
-export const resetPasswordController = async (req: Request, res: Response) => {
+  httpResponse.default(res, message, statusCode);
+});
+
+export const resetPasswordController = catchAsync(async (req: Request, res: Response) => {
+
   // Datas
-  const token: any = req.params.token;
+  const token: string = req.params.token as string;
   const hashedToken = urlToken.hash(token);
 
   const { password, rePassword }: any = req.body;
 
-  await exceptionHandlers.authHandler(
-    "mobile",
-    res,
-    () => resetPassword(hashedToken, password, rePassword)
-  );
-};
+  const { message, statusCode }: defaultResponseType = await resetPassword(hashedToken, password, rePassword);
+
+  httpResponse.default(res, message, statusCode);
+});

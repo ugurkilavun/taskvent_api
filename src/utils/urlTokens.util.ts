@@ -7,7 +7,7 @@ export class URLToken {
   };
 
   public hash(token: string): string {
-    return createHash('sha256')
+    return createHash('sha512')
       .update(token)
       .digest('hex');
   };
