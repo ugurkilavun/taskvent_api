@@ -8,6 +8,7 @@ import { UserRepository } from "../repositories/user.repository";
 import { authResponseType } from "../types/responses.type";
 // Services
 import { usernameRegex, emailRegex } from "./availability.service";
+import { passwordRegex } from "./register.service";
 
 // Class
 const userRepository = new UserRepository();
@@ -15,6 +16,8 @@ const userRepository = new UserRepository();
 const loginService = async (username?: string, password?: string): Promise<authResponseType> => {
 
   if (username === undefined || password === undefined) throw new statusCodeErrors("Incomplete data.", 400);
+
+  if (!passwordRegex.test(password)) throw new statusCodeErrors("Password must be at least 6 characters long, include one uppercase letter, one lowercase letter and one number.", 400);
 
   if (!usernameRegex.test(username) && !emailRegex.test(username)) throw new statusCodeErrors("Invalid username or email.", 400);
 

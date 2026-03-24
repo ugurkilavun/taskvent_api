@@ -14,16 +14,21 @@ import { authResponseType } from "../types/responses.type";
 import { sendVerificationEmail } from "./mail.service";
 import { usernameRegex, emailRegex } from "./availability.service";
 
-import  appConfig from "../configs/app.config";
+import appConfig from "../configs/app.config";
 
 // Class
 const userRepository = new UserRepository;
 const verifyRepository = new VerifyRepository;
 const urlToken = new URLToken();
 
+// Global datas
+export const passwordRegex: RegExp = /^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{5,50})\S$/;
+
 const registerService = async (DATA: UserType): Promise<authResponseType> => {
 
   if (Object.values(DATA).some(x => x === undefined)) throw new statusCodeErrors("Incomplete data.", 400);
+
+  if (!passwordRegex.test(DATA.password)) throw new statusCodeErrors("Password must be at least 6 characters long, include one uppercase letter, one lowercase letter and one number.", 400);
 
   const UsernameLowerCase: string = DATA.username.toLowerCase();
 
