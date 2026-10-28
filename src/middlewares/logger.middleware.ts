@@ -40,8 +40,8 @@ export class Logger {
 
     // Log varible
     const message: string = res.locals.responseMessage ? res.locals.responseMessage : res.statusMessage;
-    const { token }: { token: string } = await authMiddleware.resolveTokenSource(req.headers.authorization, req.cookies, "accessToken");
-    const splitedToken: string = !token ? undefined : token.split(".")[0];
+    const { token }: { token: string | undefined } = authMiddleware.resolveTokenSource(req.headers.authorization, req.cookies, "accessToken");
+    const splitedToken: string | undefined = !token ? undefined : token.split(".")[0];
     const level: LogLevel = this.parseLogLevel(res.statusCode);
 
     const newData: LoggerType =

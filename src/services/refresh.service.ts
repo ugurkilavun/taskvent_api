@@ -10,21 +10,19 @@ import { UserRepository } from "../repositories/user.repository";
 import { authResponseType } from '../types/responses.type';
 import { payloadType } from "../types/jwt.type";
 import { platformType } from '../types/platform.type';
-
-// .env config
-dotenv.config({ quiet: true });
+import jwtConfig from "../configs/jwt.config";
 
 // Class
 const userRepository = new UserRepository();
 
-const refreshService = async (accessToken: string, refreshToken: string, platform: platformType): Promise<authResponseType> => {
+const refreshService = async (accessToken: string | undefined, refreshToken: string, platform: platformType | undefined): Promise<authResponseType> => {
 
   if (!refreshToken) throw new statusCodeErrors("Token is missing.", 401);
 
   if (!accessToken || !refreshToken || !platform) throw new statusCodeErrors("Token is missing or invalid.", 401);
 
   const decodedAccessToken: any = jwt.decode(accessToken);
-  const decodedRefreshToken: any = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+  const decodedRefreshToken: any = jwt.verify(refreshToken, jwtConfig.refreshSecret);
 
   if (decodedAccessToken.id !== decodedRefreshToken.id && decodedAccessToken.username !== decodedRefreshToken.username) throw new statusCodeErrors("Session validation failed.", 401);
 

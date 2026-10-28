@@ -10,6 +10,15 @@ interface AppConfig {
   databaseUrl: string;
 };
 
+// type-safe
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not defined in .env");
+};
+
+if (!process.env.URL) {
+  throw new Error("URL is not defined in .env");
+};
+
 const appConfig: AppConfig = {
   port: process.env.PORT ?? 5200,
   url: process.env.URL,

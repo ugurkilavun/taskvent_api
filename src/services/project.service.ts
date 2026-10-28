@@ -1,3 +1,5 @@
+// Services
+import { sendProjectInvitation } from "./invitations/project-invitation.service";
 // Utils
 import { statusCodeErrors, } from "../utils/customErrors.util";
 // Repositories
@@ -22,7 +24,6 @@ const findRole = async (userID: string, owner: string, team: any): Promise<strin
 
   if (owner === userID) return "owner";
   else {
-    // console.log("team.length - 1:", team.length - 1);
     for (let teamIndex = 0; teamIndex <= team.length - 1; teamIndex++) {
       if (team[teamIndex].projectManagers.includes(userID)) return "projectManagers";
       if (team[teamIndex].teamLeaders.includes(userID)) return "teamLeaders";
@@ -40,23 +41,36 @@ export const createProject = async (userID: string, teamID: Array<string>, title
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
   if (title === undefined) throw new statusCodeErrors("Incomplete data.", 400);
 
-  const fiTeamByTeamIDTest: any = await teamRepository.findTeamByTeamID(teamID);
-
   const uniqueTeamIDs = [...new Set(teamID)];
+
+  const fiTeamByTeamIDQuery: any = await teamRepository.findTeamByTeamID(uniqueTeamIDs);
 
   // Team not found
   if (typeof teamID === "object")
-    if (fiTeamByTeamIDTest.length !== teamID.length) throw new statusCodeErrors("Team not found.", 404);
+    if (fiTeamByTeamIDQuery.length !== uniqueTeamIDs.length) throw new statusCodeErrors("Team not found.", 404);
+
+  // * ------------
+  const myTeams: Array<string> = [];
+  for (let index = 0; index <= uniqueTeamIDs.length - 1; index++) {
+    const findTeamByTUIDDATA: any = await teamRepository.findTeamByTUID(userID, uniqueTeamIDs[index]);
+    if (findTeamByTUIDDATA.length >= 1) myTeams.push((findTeamByTUIDDATA[0]._id).toString());
+  };
+
+  const myTeamsSet = new Set(myTeams);
+  const invitationTeams: string[] = uniqueTeamIDs.filter((item) => !myTeamsSet.has(item));
 
   const inProject: any = await projectRepository.insertProject({
     owner: userID,
-    teamID: uniqueTeamIDs,
+    teamID: myTeams,
     title: title,
     description: description,
     tags: tags,
     createdAt: new Date()
   });
   if (!inProject) throw new statusCodeErrors("Project creation error.", 400);
+
+  // Send invitation
+  sendProjectInvitation(title, inProject._id, userID, invitationTeams);
 
   return {
     message: "Project created.",
@@ -65,7 +79,7 @@ export const createProject = async (userID: string, teamID: Array<string>, title
 
 };
 
-// * GET /projects - projectResponseType
+// * GET /projects
 export const getProjects = async (userID: string): Promise<defaultResponseType> => {
 
   if (userID === undefined) throw new statusCodeErrors("Incomplete data.", 400);
@@ -252,29 +266,43 @@ export const patchProject = async (userID: string, projectID: string, teamID?: A
   const fiOneProject: any = await projectRepository.findOneProject(projectID);
   if (!fiOneProject) throw new statusCodeErrors("Project not found.", 404);
 
-  // const fiTeamByTeamID: any = await findTeamByTeamID(fiOneProject.teamID);
-  const fiTeamByTeamID: any = await teamRepository.findTeamByTeamID(teamID);
-
   const uniqueTeamIDs = [...new Set(teamID)];
+  const fiTeamByTeamID: any = await teamRepository.findTeamByTeamID(uniqueTeamIDs);
+
+  // Teams
+  const findOneProjectDATA: any = await projectRepository.findOneProject(projectID);
+  const projectTeams = findOneProjectDATA.teamID;
+  const newTeams: Array<string> = [];
+
+  uniqueTeamIDs.map((item: string) => {
+    if (!projectTeams.includes(item.toString())) newTeams.push(item);
+  });
 
   // Team not found
   if (typeof teamID === "object")
     if (fiTeamByTeamID.length !== uniqueTeamIDs.length) throw new statusCodeErrors("Team not found.", 404);
 
   // Role control
-  const role: string | undefined = await findRole(userID, fiOneProject.owner.toString(), fiTeamByTeamID);
+  const findTeamByTeamIDForRole: any = await teamRepository.findTeamByTeamID(fiOneProject.teamID);
+  const role: string | undefined = await findRole(userID, fiOneProject.owner.toString(), findTeamByTeamIDForRole);
   if (role === "members" || role === undefined) throw new statusCodeErrors("Unauthorized access.", 401);
 
-  // Update
-  if (uniqueTeamIDs.length >= 1) {
-    const updateProject = projectRepository.updateProjectsByProjectID(projectID, uniqueTeamIDs, title, description, tags);
-    if (!updateProject) throw new statusCodeErrors("Update error.", 400);
-  };
+  // * TR: X Projesi’nde yer alan takımlardaki yetkili kullanıcılar, kendi takımlarını davet beklemeksizin X Projesi’ne ekleyebilir.
+  // * EN: Authorized users from teams already included in Project X can add their own teams to Project X without requiring an invitation.
+  const teamsToBeAdded: Array<string> = [];
+  const teamsToBeInvited: Array<string> = [];
 
-  if (uniqueTeamIDs.length <= 0) {
-    const updateProject = projectRepository.updateProjectsByProjectID(projectID, undefined, title, description, tags);
-    if (!updateProject) throw new statusCodeErrors("Update error.", 400);
-  };
+  fiTeamByTeamID.map((data: any) => {
+    if ((data.owner).toString() === userID) teamsToBeAdded.push((data._id).toString());
+    else teamsToBeInvited.push((data._id).toString());
+  });
+
+  // Update
+  const updateProject = projectRepository.updateProjectsByProjectID(projectID, teamsToBeAdded, title, description, tags);
+  if (!updateProject) throw new statusCodeErrors("Update error.", 400);
+
+  // Send invitation
+  sendProjectInvitation(!title ? fiOneProject.title : title, projectID, userID, teamsToBeInvited);
 
   return {
     message: "Project updated.",

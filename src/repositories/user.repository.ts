@@ -15,6 +15,10 @@ export class UserRepository {
     return await user.findOne({ email: email }, { _id: 1, firstname: 1, lastname: 1, email: 1, country: 1 });
   };
 
+  public async findEverythingByID(id: string): Promise<any> {
+    return await user.findOne({ _id: id });
+  };
+
   public async findById(id: string): Promise<any> {
     return await user.findOne({ _id: id }, { _id: 1, username: 1 });
   };
@@ -25,6 +29,14 @@ export class UserRepository {
 
   public async findById_flu(id: Array<string>): Promise<any> {
     return await user.find({ _id: id }, { _id: 0, firstname: 1, lastname: 1, username: 1 });
+  };
+
+  public async findById_fl(id: string): Promise<any> {
+    return await user.findOne({ _id: id }, { _id: 0, firstname: 1, lastname: 1 });
+  };
+
+  public async findFLUECByID(id: Array<string>): Promise<any> {
+    return await user.find({ _id: id }, { _id: 1, firstname: 1, lastname: 1, username: 1, email: 1, country: 1 });
   };
 
   public async checkEmailOrUsername(emailOrUsername: string): Promise<any> {

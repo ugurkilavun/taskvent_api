@@ -1,5 +1,7 @@
 import jwt, { TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
+// Configs
+import jwtConfig from "../configs/jwt.config";
 // Utils
 import { statusCodeErrors } from '../utils/customErrors.util';
 // Types
@@ -20,10 +22,10 @@ export class AuthMiddleware {
 
     this.validateAuthPresence(req.headers.authorization, req.cookies);
 
-    const { token, platform }: { token: string | undefined, platform: platformType } = this.resolveTokenSource(req.headers.authorization, req.cookies, "accessToken");
+    const { token, platform }: { token: string | undefined, platform: platformType | undefined } = this.resolveTokenSource(req.headers.authorization, req.cookies, "accessToken");
     if (!token || !platform) throw new statusCodeErrors("Token is missing or invalid.", 401);
 
-    const decoded: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decoded: any = jwt.verify(token, jwtConfig.accessSecret);
 
     res.locals.user = { id: decoded.id, username: decoded.username };
     res.locals.platform = platform;
@@ -39,7 +41,7 @@ export class AuthMiddleware {
    * @param webToken - The cookies object containing session tokens.
    * @param tokentype - The specific token key to look for in cookies
    */
-  public resolveTokenSource(mobileToken: string | undefined, webToken: any | undefined, tokentype: "accessToken" | "refreshToken" = "accessToken"): { token: string | undefined, platform: platformType } {
+  public resolveTokenSource(mobileToken: string | undefined, webToken: any | undefined, tokentype: "accessToken" | "refreshToken" = "accessToken"): { token: string | undefined, platform: platformType | undefined } {
 
     /// Mobile / API clients: req.headers.authorization
     if (mobileToken?.startsWith("Bearer ")) return { token: mobileToken.split(" ")[1], platform: "mobile" };
@@ -57,7 +59,7 @@ export class AuthMiddleware {
    * @throws {statusCodeErrors} 400 - If multiple authentication methods are provided.
    * @throws {statusCodeErrors} 401 - If no authentication token or cookie is found.
    */
-  public validateAuthPresence(authHeader: string, cookies: object): void {
+  public validateAuthPresence(authHeader: string | undefined, cookies: object): void {
 
     // Datas
     const hasHeader: boolean = !!authHeader;

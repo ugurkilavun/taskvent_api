@@ -38,7 +38,7 @@ type UserInfo = {
 
 export type ErrorInfo = {
   name?: string;
-  message: string;
+  message: string | undefined;
   stack?: string;
   // code?: string | number; // Application-specific error code
 };

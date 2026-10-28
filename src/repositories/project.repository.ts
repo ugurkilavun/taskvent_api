@@ -28,20 +28,26 @@ export class ProjectRepository {
     });
   };
 
-
   public async findProjectsByTeamID(teamIDs: Array<string>): Promise<any> {
     return await project.find({
       teamID: { $in: teamIDs }
     });
   };
 
+  public async findProjectNameByID(id: string): Promise<any> {
+    return await project.findOne({
+      _id: id
+    }, { _id: 1, title: 1 });
+  };
 
-  public async updateProjectsByProjectID(projectID: string, teamID?: Array<string>, title?: string, description?: string, tags?: Array<string>): Promise<any> {
+  public async updateProjectsByProjectID(projectID: string, teamID: Array<string>, title?: string, description?: string, tags?: Array<string>): Promise<any> {
     return await project.updateOne({
       _id: projectID
     }, {
+      $addToSet: {
+        teamID: teamID
+      },
       $set: {
-        teamID: teamID,
         title: title,
         description: description,
         tags: tags

@@ -19,7 +19,7 @@ export class HttpResponse {
     res: Response,
     statusCode: number,
     platform: platformType = "mobile",
-    data: Record<string, string>
+    data: Record<string, string | undefined>
   ): void {
 
     if (platform === "mobile") {
@@ -56,7 +56,7 @@ export class HttpResponse {
     res: Response,
     statusCode: number,
     platform: platformType = "mobile",
-    data: Record<string, string>
+    data: Record<string, string | undefined>
   ): void {
 
     if (platform === "mobile") {
